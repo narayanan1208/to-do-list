@@ -1,17 +1,21 @@
 from contextlib import asynccontextmanager
 from datetime import datetime
+from dotenv import load_dotenv
 import os
 import sys
 
 from bson import ObjectId
 from fastapi import FastAPI, status
+from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel
 import uvicorn
 
 from dal import ToDoDAL, ListSummary, ToDoList
 
-COLLECTION_NAME = "todo_lists"
+load_dotenv()
+
+COLLECTION_NAME = "to-do-list"
 MONGODB_URI = os.environ["MONGODB_URI"]
 DEBUG = os.environ.get("DEBUG", "").strip().lower() in {"1", "true", "on", "yes"}
 
@@ -21,6 +25,9 @@ async def lifespan(app: FastAPI):
     # Startup:
     client = AsyncIOMotorClient(MONGODB_URI)
     database = client.get_default_database()
+
+    print("Connected to database:", database.name)  # Debugging
+    print("Existing collections:", await database.list_collection_names())  # Debugging
 
     # Ensure the database is available:
     pong = await database.command("ping")
@@ -39,6 +46,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, debug=DEBUG)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # React frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all headers
+)
 
 @app.get("/api/lists")
 async def get_all_lists() -> list[ListSummary]:
