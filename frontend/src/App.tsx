@@ -1,52 +1,52 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./App.css";
-import ListToDoLists from "./components/ListTodoLists";
+import ListToDoLists from "./components/ListToDoLists";
 import ToDoList from "./components/ToDoList";
 
 function App() {
-  const [listSummaries, setListSummaries] = useState(null);
+  const [listSummaries, setListSummaries] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-
+  const API_BASE_URL = "http://localhost:3001/api";
   useEffect(() => {
     reloadData().catch(console.error);
   }, []);
 
-  async function reloadData() {
-    const response = await axios.get("/api/lists");
-    const data = await response.data;
+  const reloadData = async () => {
+    const res = await axios.get(`${API_BASE_URL}/lists`);
+    const data = await res.data;
     setListSummaries(data);
-  }
+  };
 
-  function handleNewToDoList(newName) {
+  const handleNewToDoList = (newName: string) => {
     const updateData = async () => {
       const newListData = {
         name: newName,
       };
 
-      await axios.post(`/api/lists`, newListData);
+      await axios.post(`${API_BASE_URL}/lists`, newListData);
       reloadData().catch(console.error);
     };
     updateData();
-  }
+  };
 
-  function handleDeleteToDoList(id) {
+  const handleDeleteToDoList = (id: number) => {
     const updateData = async () => {
-      await axios.delete(`/api/lists/${id}`);
+      await axios.delete(`${API_BASE_URL}/lists/${id}`);
       reloadData().catch(console.error);
     };
     updateData();
-  }
+  };
 
-  function handleSelectList(id) {
+  const handleSelectList = (id: number) => {
     console.log("Selecting item", id);
     setSelectedItem(id);
-  }
+  };
 
-  function backToList() {
+  const backToList = () => {
     setSelectedItem(null);
     reloadData().catch(console.error);
-  }
+  };
 
   if (selectedItem === null) {
     return (
